@@ -105,7 +105,7 @@
             <div class="bg-white rounded-[2rem] shadow-2xl shadow-indigo-100 border border-slate-100 overflow-hidden">
                 <div class="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
                     <div>
-                        <h2 id="formTitle" class="text-2xl font-black text-slate-800">Form Pengambilan</h2>
+                        <h2 id="formTitle" class="text-2xl font-black text-slate-800">Form Pengambilan Barang</h2>
                         <p class="text-slate-400 text-sm">Lengkapi data pengambilan barang di bawah ini.</p>
                     </div>
                     <button id="btnCancelEdit" onclick="resetForm()" class="hidden bg-red-100 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-200 transition">
@@ -124,12 +124,12 @@
                         </div>
                         <div class="space-y-2">
                             <label class="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nama Penerima</label>
-                            <input type="text" id="namaPengambil" required placeholder="Nama personil..." 
+                            <input type="text" id="namaPengambil" required placeholder="Nama Pemohon..." 
                                 class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 transition-all outline-none font-semibold">
                         </div>
                         <div class="space-y-2 md:col-span-2">
                             <label class="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Unit Kerja / Ruangan</label>
-                            <input type="text" id="unitKerjaManual" required placeholder="Contoh: OK / VK / POLI GIGI" 
+                            <input type="text" id="unitKerjaManual" required placeholder="Contoh: Meranti / IGD / Poliklinik" 
                                 class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 transition-all outline-none font-semibold">
                         </div>
                     </div>
@@ -146,7 +146,7 @@
 
                     <div class="pt-4">
                         <button type="submit" id="submitBtn" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-600 transition-all shadow-xl active:scale-[0.99]">
-                            Simpan & Cetak Bukti
+                            Simpan & Cetak Formulir Pengambilan
                         </button>
                     </div>
                 </form>
@@ -593,5 +593,6 @@
     </script>
 </body>
 </html>
+
 
 

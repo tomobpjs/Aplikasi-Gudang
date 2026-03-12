@@ -54,7 +54,6 @@
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        /* Loading Overlay */
         #loadingOverlay {
             position: fixed;
             inset: 0;
@@ -84,7 +83,7 @@
                         <svg class="w-8 h-8 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                     </div>
                     <div>
-                        <h1 class="text-xl font-extrabold tracking-tight italic">PORTAL INVENTORY BAGIAN RUMAH TANGGA RSU DADI KELUARGA</h1>
+                        <h1 class="text-xl font-extrabold tracking-tight italic uppercase">Portal Inventory RSU Dadi Keluarga</h1>
                         <p id="userStatus" class="text-indigo-100 text-[10px] font-bold uppercase tracking-[0.2em]">Memuat User...</p>
                     </div>
                 </div>
@@ -106,7 +105,7 @@
                 <div class="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
                     <div>
                         <h2 id="formTitle" class="text-2xl font-black text-slate-800">Form Pengambilan Barang</h2>
-                        <p class="text-slate-400 text-sm">Lengkapi data pengambilan barang di bawah ini.</p>
+                        <p class="text-slate-400 text-sm">Lengkapi data pengambilan barang (Mendukung angka pecahan).</p>
                     </div>
                     <button id="btnCancelEdit" onclick="resetForm()" class="hidden bg-red-100 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-200 transition">
                         Batal Edit
@@ -146,7 +145,7 @@
 
                     <div class="pt-4">
                         <button type="submit" id="submitBtn" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-600 transition-all shadow-xl active:scale-[0.99]">
-                            Simpan & Cetak Formulir Pengambilan
+                            Simpan & Cetak Formulir
                         </button>
                     </div>
                 </form>
@@ -166,7 +165,7 @@
                             <tr>
                                 <th class="px-6 py-4">Tgl & ID</th>
                                 <th class="px-6 py-4">Penerima & Unit</th>
-                                <th class="px-6 py-4">Item</th>
+                                <th class="px-6 py-4">Item (Qty)</th>
                                 <th class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -186,9 +185,9 @@
                 <table class="w-full text-sm">
                     <thead class="bg-slate-900 text-white font-bold text-[10px] uppercase">
                         <tr>
-                            <th class="px-6 py-4">Tgl</th>
-                            <th class="px-6 py-4">Nama & Unit</th>
-                            <th class="px-6 py-4">Barang</th>
+                            <th class="px-6 py-4 text-left">Tgl</th>
+                            <th class="px-6 py-4 text-left">Nama & Unit</th>
+                            <th class="px-6 py-4 text-left">Barang</th>
                             <th class="px-6 py-4 text-center">Qty</th>
                         </tr>
                     </thead>
@@ -221,10 +220,10 @@
     <div id="modalPreview" class="fixed inset-0 z-50 hidden bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-2 no-print">
         <div class="bg-white w-full max-w-md max-h-[95vh] rounded-[2rem] overflow-hidden flex flex-col">
             <div class="p-4 border-b border-slate-100 flex justify-between items-center">
-                <span class="text-xs font-black text-slate-500 uppercase">Preview Cetak A4</span>
+                <span class="text-xs font-black text-slate-500 uppercase">Preview Bukti</span>
                 <div class="flex gap-2">
                     <button onclick="closePreview()" class="text-xs font-bold text-slate-400">Tutup</button>
-                    <button onclick="window.print()" class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold">Cetak Sekarang</button>
+                    <button onclick="window.print()" class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-lg">Cetak</button>
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto p-4 bg-slate-200 flex justify-center items-start">
@@ -240,76 +239,59 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Config
         const firebaseConfig = {
-  apiKey: "AIzaSyBp6R5Eg-msuKxd9bTRfMm5BVCDbymdP-8",
-  authDomain: "gudang-rsu-dk.firebaseapp.com",
-  projectId: "gudang-rsu-dk",
-  storageBucket: "gudang-rsu-dk.firebasestorage.app",
-  messagingSenderId: "91825157272",
-  appId: "1:91825157272:web:44bf7d7cd4f8280fa18ced",
-  measurementId: "G-961497SD4H"
-};
+            apiKey: "AIzaSyBp6R5Eg-msuKxd9bTRfMm5BVCDbymdP-8",
+            authDomain: "gudang-rsu-dk.firebaseapp.com",
+            projectId: "gudang-rsu-dk",
+            storageBucket: "gudang-rsu-dk.firebasestorage.app",
+            messagingSenderId: "91825157272",
+            appId: "1:91825157272:web:44bf7d7cd4f8280fa18ced",
+            measurementId: "G-961497SD4H"
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        // State Global
         let transactions = [];
         let masterItems = [];
         let currentUser = null;
 
-        // Inisialisasi Auth
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth Error:", error);
-                alert("Gagal terhubung ke server. Pastikan koneksi internet aktif.");
-            }
-        };
-
+        // Init Auth
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
-                document.getElementById('userStatus').innerText = `User ID: ${user.uid}`;
+                document.getElementById('userStatus').innerText = `Sync Active: ${user.uid.substring(0,8)}...`;
                 document.getElementById('loadingOverlay').style.display = 'none';
                 startSync();
+            } else {
+                signInAnonymously(auth);
             }
         });
 
-        // Sinkronisasi Firestore (RULE 1 & 2)
         const startSync = () => {
             if (!currentUser) return;
-
-            // Sync Transaksi (Public Data)
             const transRef = collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
             onSnapshot(transRef, (snapshot) => {
                 transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Sort manual (Rule 2: No orderBy in complex query)
                 transactions.sort((a, b) => b.timestamp - a.timestamp);
                 renderDatabase();
                 renderReport();
-            }, (err) => console.error("Sync Trans Error:", err));
+            });
 
-            // Sync Master Barang (Public Data)
             const masterRef = collection(db, 'artifacts', appId, 'public', 'data', 'master_items');
             onSnapshot(masterRef, (snapshot) => {
                 masterItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderMaster();
                 updateDatalist();
-            }, (err) => console.error("Sync Master Error:", err));
+            });
         };
 
-        // --- Fungsi UI & Bisnis ---
+        // --- Global Functions ---
 
         window.switchTab = (tab) => {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
@@ -319,134 +301,112 @@
                 b.classList.add('text-indigo-200');
             });
             document.getElementById('btn-' + tab).classList.add('tab-active');
-            
-            if(tab === 'database') renderDatabase();
-            if(tab === 'report') renderReport();
-            if(tab === 'master') renderMaster();
-        };
-
-        const updateDatalist = () => {
-            const dl = document.getElementById('masterBarangList');
-            dl.innerHTML = masterItems.map(item => `<option value="${item.name}">`).join('');
-        };
-
-        const renderMaster = () => {
-            const grid = document.getElementById('masterListGrid');
-            grid.innerHTML = masterItems.sort((a,b) => a.name.localeCompare(b.name)).map((item) => `
-                <div class="flex items-center justify-between bg-white border border-slate-100 p-3 rounded-xl shadow-sm hover:border-indigo-200 transition-all group">
-                    <span class="text-sm font-semibold text-slate-600 truncate mr-2">${item.name}</span>
-                    <button onclick="removeMasterItem('${item.id}')" class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                </div>
-            `).join('');
-        };
-
-        window.addMasterItem = async () => {
-            if (!currentUser) return;
-            const input = document.getElementById('newMasterItem');
-            const val = input.value.trim();
-            if(val) {
-                try {
-                    const masterRef = collection(db, 'artifacts', appId, 'public', 'data', 'master_items');
-                    await addDoc(masterRef, { name: val, createdAt: Date.now() });
-                    input.value = "";
-                } catch (e) { alert("Gagal menyimpan data."); }
-            }
-        };
-
-        window.removeMasterItem = async (id) => {
-            if (!currentUser) return;
-            if(confirm('Hapus item ini dari Master?')) {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'master_items', id));
-                } catch (e) { alert("Gagal menghapus data."); }
-            }
         };
 
         window.addRow = (nama = '', qty = 1, satuan = '') => {
             const container = document.getElementById('itemRows');
             const div = document.createElement('div');
-            div.className = "flex gap-2 bg-slate-50 p-3 rounded-xl";
+            div.className = "flex gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm";
             div.innerHTML = `
-                <input type="text" placeholder="Cari barang..." value="${nama}" list="masterBarangList" class="item-nama flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none font-medium">
-                <input type="number" value="${qty}" class="item-qty w-16 bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm text-center focus:border-indigo-500 outline-none font-bold text-indigo-600">
+                <input type="text" placeholder="Pilih barang..." value="${nama}" list="masterBarangList" class="item-nama flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none font-medium">
+                <input type="number" step="any" value="${qty}" class="item-qty w-20 bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm text-center focus:border-indigo-500 outline-none font-bold text-indigo-600">
                 <input type="text" value="${satuan}" placeholder="Sat" class="item-satuan w-16 bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm text-center uppercase focus:border-indigo-500 outline-none">
                 <button type="button" onclick="this.parentElement.remove()" class="text-red-300 hover:text-red-600 px-2 transition-colors">×</button>
             `;
             container.appendChild(div);
         };
 
+        const updateDatalist = () => {
+            document.getElementById('masterBarangList').innerHTML = masterItems.map(i => `<option value="${i.name}">`).join('');
+        };
+
+        window.addMasterItem = async () => {
+            const val = document.getElementById('newMasterItem').value.trim();
+            if(val) {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'master_items'), { name: val, createdAt: Date.now() });
+                document.getElementById('newMasterItem').value = "";
+            }
+        };
+
+        window.removeMasterItem = async (id) => {
+            if(confirm('Hapus item dari Master?')) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'master_items', id));
+            }
+        };
+
+        const renderMaster = () => {
+            const grid = document.getElementById('masterListGrid');
+            grid.innerHTML = masterItems.sort((a,b) => a.name.localeCompare(b.name)).map(item => `
+                <div class="flex items-center justify-between bg-white border border-slate-100 p-3 rounded-xl shadow-sm hover:border-indigo-200 transition-all group">
+                    <span class="text-xs font-bold text-slate-600 truncate">${item.name}</span>
+                    <button onclick="removeMasterItem('${item.id}')" class="text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">×</button>
+                </div>
+            `).join('');
+        };
+
         document.getElementById('formPengambilan').onsubmit = async function(e) {
             e.preventDefault();
-            if (!currentUser) return;
-
-            const rawDate = document.getElementById('tanggalInput').value;
             const items = Array.from(document.querySelectorAll('#itemRows > div')).map(r => ({
                 nama: r.querySelector('.item-nama').value.trim(),
-                qty: r.querySelector('.item-qty').value,
+                qty: parseFloat(r.querySelector('.item-qty').value) || 0,
                 satuan: r.querySelector('.item-satuan').value.trim()
             }));
 
-            if(items.length === 0 || items.some(it => it.nama === "")) return;
+            if(items.length === 0 || items.some(it => it.nama === "")) {
+                alert("Lengkapi data barang!"); return;
+            }
 
+            const rawDate = document.getElementById('tanggalInput').value;
             const editId = document.getElementById('editEntryId').value;
-            const entryDate = new Date(rawDate);
-            const formattedDate = entryDate.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'});
-
+            
             const payload = {
                 namaPengambil: document.getElementById('namaPengambil').value.trim(),
                 unitKerja: document.getElementById('unitKerjaManual').value.trim(),
-                items: items,
-                tanggal: formattedDate,
+                items,
+                tanggal: new Date(rawDate).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}),
                 isoDate: rawDate,
-                timestamp: Date.now(),
-                createdBy: currentUser.uid
+                timestamp: Date.now()
             };
 
             try {
-                let finalId;
-                const transRef = collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
-                
                 if(editId) {
                     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', editId), payload);
-                    finalId = editId;
+                    showPreview(editId);
                 } else {
                     payload.regCode = `TRX-${transactions.length + 101}`;
-                    const docRef = await addDoc(transRef, payload);
-                    finalId = docRef.id;
+                    const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), payload);
+                    showPreview(docRef.id);
                 }
-                
-                showPreview(finalId);
                 resetForm();
-            } catch (err) {
-                alert("Gagal sinkronisasi ke cloud.");
-            }
+            } catch (err) { alert("Gagal menyimpan ke Cloud."); }
         };
 
         window.resetForm = () => {
             document.getElementById('formPengambilan').reset();
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('tanggalInput').value = today;
+            document.getElementById('tanggalInput').value = new Date().toISOString().split('T')[0];
             document.getElementById('editEntryId').value = "";
             document.getElementById('itemRows').innerHTML = '';
-            document.getElementById('formTitle').innerText = "Form Pengambilan";
-            document.getElementById('submitBtn').innerText = "Simpan & Cetak Bukti";
+            document.getElementById('formTitle').innerText = "Form Pengambilan Barang";
             document.getElementById('btnCancelEdit').classList.add('hidden');
             addRow();
         };
 
+        window.deleteEntry = async (id) => {
+            if(confirm('Hapus transaksi ini?')) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', id));
+            }
+        };
+
         window.editEntry = (id) => {
-            const entry = transactions.find(d => d.id === id);
-            if (!entry) return;
+            const entry = transactions.find(t => t.id === id);
+            if(!entry) return;
             document.getElementById('editEntryId').value = entry.id;
-            document.getElementById('tanggalInput').value = entry.isoDate || new Date().toISOString().split('T')[0];
+            document.getElementById('tanggalInput').value = entry.isoDate;
             document.getElementById('namaPengambil').value = entry.namaPengambil;
             document.getElementById('unitKerjaManual').value = entry.unitKerja;
             document.getElementById('itemRows').innerHTML = '';
             entry.items.forEach(it => addRow(it.nama, it.qty, it.satuan));
-            document.getElementById('formTitle').innerText = "Update Transaksi Cloud";
-            document.getElementById('submitBtn').innerText = "Simpan Perubahan Cloud";
+            document.getElementById('formTitle').innerText = "Edit Transaksi";
             document.getElementById('btnCancelEdit').classList.remove('hidden');
             switchTab('input');
         };
@@ -456,143 +416,121 @@
             body.innerHTML = transactions.map(row => `
                 <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
                     <td class="px-6 py-4">
-                        <div class="font-bold text-indigo-600">${row.regCode || 'NEW'}</div>
-                        <div class="text-[10px] text-slate-400 font-bold uppercase">${row.tanggal}</div>
+                        <div class="font-bold text-indigo-600">${row.regCode}</div>
+                        <div class="text-[9px] text-slate-400 font-bold">${row.tanggal}</div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="font-bold uppercase text-slate-700 leading-tight">${row.namaPengambil}</div>
-                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">${row.unitKerja}</div>
+                        <div class="font-bold text-slate-700 uppercase leading-tight">${row.namaPengambil}</div>
+                        <div class="text-[9px] text-slate-400 font-bold uppercase">${row.unitKerja}</div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex flex-wrap gap-1 max-w-xs">
-                            ${row.items.map(it => `
-                                <span class="text-[9px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-100 font-bold uppercase">
-                                    ${it.nama} (${it.qty})
-                                </span>
-                            `).join('')}
+                        <div class="flex flex-wrap gap-1">
+                            ${row.items.map(it => `<span class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold">${it.nama} (${it.qty.toLocaleString('id-ID')})</span>`).join('')}
                         </div>
                     </td>
                     <td class="px-6 py-4 text-center">
-                        <div class="flex items-center justify-center gap-4">
-                            <button onclick="showPreview('${row.id}')" class="text-indigo-600 hover:text-indigo-800 font-bold text-xs">CETAK</button>
-                            <button onclick="editEntry('${row.id}')" class="text-amber-500 hover:text-amber-700 font-bold text-xs">EDIT</button>
-                            <button onclick="deleteEntry('${row.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">HAPUS</button>
+                        <div class="flex gap-3 justify-center">
+                            <button onclick="showPreview('${row.id}')" class="text-indigo-600 font-bold text-xs hover:underline">CETAK</button>
+                            <button onclick="editEntry('${row.id}')" class="text-amber-500 font-bold text-xs hover:underline">EDIT</button>
+                            <button onclick="deleteEntry('${row.id}')" class="text-red-400 font-bold text-xs hover:underline">HAPUS</button>
                         </div>
                     </td>
                 </tr>
             `).join('');
         };
 
-        window.deleteEntry = async (id) => {
-            if (!currentUser) return;
-            if (confirm('Hapus riwayat ini selamanya dari Cloud?')) {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', id));
-                } catch (e) { alert("Gagal menghapus data."); }
-            }
-        };
-
         window.renderReport = () => {
-            const periodInput = document.getElementById('reportPeriod');
-            if(!periodInput.value) return;
-            const [year, month] = periodInput.value.split('-');
-            
-            const filteredData = transactions.filter(d => {
-                const dDate = new Date(d.isoDate);
-                return dDate.getFullYear() == year && (dDate.getMonth() + 1) == month;
+            const period = document.getElementById('reportPeriod').value;
+            if(!period) return;
+            const [y, m] = period.split('-');
+            const filtered = transactions.filter(t => {
+                const d = new Date(t.isoDate);
+                return d.getFullYear() == y && (d.getMonth() + 1) == m;
             });
-
-            const body = document.getElementById('reportTableBody');
+            
             let html = "";
-            filteredData.forEach(entry => {
+            filtered.forEach(entry => {
                 entry.items.forEach(it => {
-                    html += `
-                        <tr class="hover:bg-slate-50 border-b border-slate-100">
-                            <td class="px-6 py-3 text-[10px] font-bold text-slate-400">${entry.tanggal}</td>
-                            <td class="px-6 py-3">
-                                <div class="font-bold uppercase text-slate-700">${entry.namaPengambil}</div>
-                                <div class="text-[9px] font-bold text-slate-400 uppercase">${entry.unitKerja}</div>
-                            </td>
-                            <td class="px-6 py-3 font-semibold uppercase text-indigo-600 text-xs">${it.nama}</td>
-                            <td class="px-6 py-3 text-center font-black">${it.qty} <small class="font-normal text-slate-400">${it.satuan}</small></td>
-                        </tr>
-                    `;
+                    html += `<tr class="border-b border-slate-100">
+                        <td class="px-6 py-3 text-[10px] font-bold text-slate-400">${entry.tanggal}</td>
+                        <td class="px-6 py-3"><div class="font-bold uppercase text-slate-700 text-xs">${entry.namaPengambil}</div><div class="text-[9px] text-slate-400 uppercase font-bold">${entry.unitKerja}</div></td>
+                        <td class="px-6 py-3 text-xs font-semibold text-indigo-600 uppercase">${it.nama}</td>
+                        <td class="px-6 py-3 text-center font-bold text-xs">${it.qty.toLocaleString('id-ID')} <small class="text-slate-400 font-normal uppercase">${it.satuan}</small></td>
+                    </tr>`;
                 });
             });
-            body.innerHTML = html || '<tr><td colspan="4" class="p-12 text-center text-slate-300 italic">Data tidak ditemukan untuk periode ini.</td></tr>';
+            document.getElementById('reportTableBody').innerHTML = html || '<tr><td colspan="4" class="py-10 text-center text-slate-300 italic">Tidak ada data.</td></tr>';
         };
 
         window.showPreview = (id) => {
-            const entry = transactions.find(d => d.id === id);
+            const entry = transactions.find(t => t.id === id);
             if(!entry) return;
-
+            
             const content = `
                 <div style="font-family: 'Plus Jakarta Sans', sans-serif; color: #000; width: 100%; box-sizing: border-box; background: white;">
-                    <div style="text-align: center; border-bottom: 2px solid #000; padding: 2px 0 6px 0;">
-                        <h2 style="margin: 0; font-size: 11pt; font-weight: 800; letter-spacing: -0.01em;">RSU DADI KELUARGA</h2>
-                        <p style="margin: 0; font-size: 7pt; font-weight: 700; color: #333; letter-spacing: 1px;">BUKTI PENGAMBILAN BARANG</p>
+                    <div style="text-align: center; border-bottom: 2.5px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+                        <h2 style="margin: 0; font-size: 13pt; font-weight: 900; letter-spacing: -0.5px;">RSU DADI KELUARGA</h2>
+                        <p style="margin: 0; font-size: 8pt; font-weight: 700; color: #333; letter-spacing: 2px; text-transform: uppercase;">Bukti Pengambilan Barang</p>
                     </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 7.5pt; padding: 8px 0; border-bottom: 1px dashed #000; margin-bottom: 10px;">
-                        <div style="width: 65%;">
+                    <div style="display: flex; justify-content: space-between; font-size: 8pt; margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
+                        <div style="width: 60%;">
                             <table style="width: 100%; border-collapse: collapse;">
-                                <tr><td style="width: 25%; color: #666;">Unit Kerja</td><td>: <b>${entry.unitKerja.toUpperCase()}</b></td></tr>
+                                <tr><td style="width: 30%; color: #666;">Unit</td><td>: <b>${entry.unitKerja.toUpperCase()}</b></td></tr>
                                 <tr><td style="color: #666;">Penerima</td><td>: <b>${entry.namaPengambil.toUpperCase()}</b></td></tr>
                             </table>
                         </div>
-                        <div style="text-align: right; width: 35%;">
-                            <span style="display: block; font-family: 'JetBrains Mono'; font-weight: 800; font-size: 8pt;">${entry.regCode}</span>
-                            <span style="display: block; font-size: 6.5pt; margin-top: 2px;">Tgl: ${entry.tanggal}</span>
+                        <div style="text-align: right; width: 40%;">
+                            <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 9pt;">${entry.regCode}</div>
+                            <div style="font-size: 7pt; color: #666;">${entry.tanggal}</div>
                         </div>
                     </div>
                     <div style="min-height: 8.5cm;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
                             <thead>
-                                <tr style="border-bottom: 1.5px solid #000;">
-                                    <th style="padding: 5px 2px; text-align: left; width: 60%; text-transform: uppercase; font-size: 6.5pt;">Item Barang</th>
-                                    <th style="padding: 5px 2px; text-align: center; width: 15%; text-transform: uppercase; font-size: 6.5pt;">Qty</th>
-                                    <th style="padding: 5px 2px; text-align: center; width: 25%; text-transform: uppercase; font-size: 6.5pt;">Satuan</th>
+                                <tr style="border-bottom: 1.5px solid #000; background: #fafafa;">
+                                    <th style="padding: 8px 4px; text-align: left; width: 65%;">ITEM</th>
+                                    <th style="padding: 8px 4px; text-align: center; width: 15%;">QTY</th>
+                                    <th style="padding: 8px 4px; text-align: center; width: 20%;">SAT</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${entry.items.map(it => `
-                                <tr style="border-bottom: 0.5px solid #eee;">
-                                    <td style="padding: 6px 2px; font-weight: 500; text-transform: uppercase;">${it.nama}</td>
-                                    <td style="padding: 6px 2px; text-align: center; font-weight: 800;">${it.qty}</td>
-                                    <td style="padding: 6px 2px; text-align: center; text-transform: uppercase; color: #444;">${it.satuan || '-'}</td>
-                                </tr>
+                                    <tr style="border-bottom: 0.5px solid #eee;">
+                                        <td style="padding: 10px 4px; font-weight: 600; text-transform: uppercase;">${it.nama}</td>
+                                        <td style="padding: 10px 4px; text-align: center; font-weight: 800; color: #4f46e5;">${it.qty.toLocaleString('id-ID')}</td>
+                                        <td style="padding: 10px 4px; text-align: center; text-transform: uppercase; color: #666; font-size: 7pt;">${it.satuan || '-'}</td>
+                                    </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
-                    <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 7.5pt; text-align: center;">
+                    <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 8pt; text-align: center;">
                         <div style="width: 120px;">
-                            <p style="margin-bottom: 50px; font-size: 6.5pt; color: #444;">Petugas Gudang,</p>
-                            <p style="border-top: 1px solid #000; padding-top: 4px;">( .................... )</p>
+                            <p style="margin-bottom: 50px;">Petugas Rumah Tangga,</p>
+                            <p style="font-weight: 800; border-top: 1px solid #eee; padding-top: 5px;">( .................... )</p>
                         </div>
                         <div style="width: 120px;">
-                            <p style="margin-bottom: 50px; font-size: 6.5pt; color: #444;">Penerima,</p>
-                            <p style="font-weight: 800; border-top: 1px solid #000; padding-top: 4px;">${entry.namaPengambil.toUpperCase()}</p>
+                            <p style="margin-bottom: 50px;">Penerima,</p>
+                            <p style="font-weight: 800; border-top: 1px solid #eee; padding-top: 5px;">( .................... )</p>
                         </div>
                     </div>
-                    <div style="text-align: center; font-size: 5.5pt; margin-top: 30px; border-top: 1px solid #f1f1f1; padding-top: 10px; color: #bbb;">
-                        Dicetak secara cloud otomatis oleh Gudang RSU Dadi Keluarga
+                    <div style="margin-top: 20px; text-align: center; font-size: 6pt; color: #aaa; border-top: 1px solid #f9f9f9; padding-top: 10px;">
+                        Dicetak otomatis melalui Portal Inventory RSU Dadi Keluarga • Purwokerto
                     </div>
                 </div>
             `;
+            
             document.getElementById('previewSheet').innerHTML = content;
             document.getElementById('printArea').innerHTML = content;
             document.getElementById('modalPreview').classList.remove('hidden');
-        }
+        };
 
         window.closePreview = () => document.getElementById('modalPreview').classList.add('hidden');
 
-        // Initial Start
-        initAuth();
-        resetForm();
+        // Initial Row
+        addRow();
+        document.getElementById('tanggalInput').value = new Date().toISOString().split('T')[0];
 
     </script>
 </body>
 </html>
-
-
-

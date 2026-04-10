@@ -1,248 +1,10 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Inventory RSU Dadi Keluarga</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
-        }
-        
-        .tab-active {
-            background-color: white;
-            color: #4f46e5;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
+import React, { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query } from 'firebase/firestore';
 
-        @media print {
-            @page {
-                size: A4 portrait;
-                margin: 0; 
-            }
-            .no-print { display: none !important; }
-            .print-only { 
-                display: flex !important; 
-                flex-direction: column;
-                align-items: center; 
-                justify-content: flex-start;
-                width: 100%;
-                min-height: 100vh;
-                background: white;
-                padding-top: 0.5in; 
-            }
-            body { 
-                background: white; 
-                margin: 0;
-                padding: 0;
-            }
-            #printArea {
-                width: 4.5in;
-                height: 7.7in;
-                padding: 0.2in;
-                box-sizing: border-box;
-                border: 0.5px solid #eee;
-                margin: 0 auto; 
-            }
-        }
-
-        .print-only { display: none; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        #loadingOverlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(255,255,255,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-    </style>
-</head>
-<body class="min-h-screen pb-12">
-
-    <div id="loadingOverlay">
-        <div class="flex flex-col items-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-700"></div>
-            <p class="mt-4 text-sm font-bold text-indigo-700">Menghubungkan ke Cloud...</p>
-        </div>
-    </div>
-
-    <!-- Header Aplikasi -->
-    <header class="bg-indigo-700 text-white shadow-lg no-print">
-        <div class="container mx-auto px-6 py-6">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-4">
-                    <div class="bg-white p-2 rounded-xl">
-                        <svg class="w-8 h-8 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-extrabold tracking-tight italic uppercase">Portal Inventory RT V1.0 By:TOMOSJR2026</h1>
-                        <p id="userStatus" class="text-indigo-100 text-[10px] font-bold uppercase tracking-[0.2em]">Memuat User...</p>
-                    </div>
-                </div>
-                
-                <nav class="flex bg-indigo-800/50 p-1 rounded-2xl overflow-x-auto">
-                    <button onclick="switchTab('input')" id="btn-input" class="nav-btn px-6 py-2 rounded-xl text-sm font-bold transition-all tab-active whitespace-nowrap">Input</button>
-                    <button onclick="switchTab('database')" id="btn-database" class="nav-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-indigo-200 hover:text-white whitespace-nowrap">Riwayat</button>
-                    <button onclick="switchTab('report')" id="btn-report" class="nav-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-indigo-200 hover:text-white whitespace-nowrap">Laporan</button>
-                    <button onclick="switchTab('master')" id="btn-master" class="nav-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-indigo-200 hover:text-white whitespace-nowrap">Master Barang</button>
-                </nav>
-            </div>
-        </div>
-    </header>
-
-    <main class="container mx-auto px-4 mt-8 no-print">
-        <!-- Tab Input -->
-        <div id="tab-input" class="tab-content max-w-3xl mx-auto space-y-6">
-            <div class="bg-white rounded-[2rem] shadow-2xl shadow-indigo-100 border border-slate-100 overflow-hidden">
-                <div class="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
-                    <div>
-                        <h2 id="formTitle" class="text-2xl font-black text-slate-800">Form Pengambilan Barang</h2>
-                        <p class="text-slate-400 text-sm">Lengkapi data pengambilan barang (Mendukung angka pecahan).</p>
-                    </div>
-                    <button id="btnCancelEdit" onclick="resetForm()" class="hidden bg-red-100 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-200 transition">
-                        Batal Edit
-                    </button>
-                </div>
-
-                <form id="formPengambilan" class="p-8 space-y-8">
-                    <input type="hidden" id="editEntryId" value="">
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal Pengambilan</label>
-                            <input type="date" id="tanggalInput" required 
-                                class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 transition-all outline-none font-semibold">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nama Penerima</label>
-                            <input type="text" id="namaPengambil" required placeholder="Nama Pemohon..." 
-                                class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 transition-all outline-none font-semibold">
-                        </div>
-                        <div class="space-y-2 md:col-span-2">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Unit Kerja / Ruangan</label>
-                            <input type="text" id="unitKerjaManual" required placeholder="Contoh: Meranti / IGD / Poliklinik" 
-                                class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 transition-all outline-none font-semibold">
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Daftar Barang</h3>
-                            <button type="button" onclick="addRow()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
-                                + Tambah Baris
-                            </button>
-                        </div>
-                        <div id="itemRows" class="space-y-3"></div>
-                    </div>
-
-                    <div class="pt-4">
-                        <button type="submit" id="submitBtn" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-600 transition-all shadow-xl active:scale-[0.99]">
-                            Simpan & Cetak Formulir
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Tab Riwayat -->
-        <div id="tab-database" class="tab-content hidden space-y-4">
-            <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-slate-800">Log Transaksi Cloud</h2>
-                    <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">LIVE SYNC</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-50 text-slate-400 font-bold text-[10px] uppercase">
-                            <tr>
-                                <th class="px-6 py-4">Tgl & ID</th>
-                                <th class="px-6 py-4">Penerima & Unit</th>
-                                <th class="px-6 py-4">Item (Qty)</th>
-                                <th class="px-6 py-4 text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="databaseBody" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab Laporan -->
-        <div id="tab-report" class="tab-content hidden">
-            <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-                <h2 class="text-xl font-bold text-slate-800">Laporan Rekap Bulanan</h2>
-                <input type="month" id="reportPeriod" onchange="renderReport()" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2">
-            </div>
-            <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
-                <table class="w-full text-sm">
-                    <thead class="bg-slate-900 text-white font-bold text-[10px] uppercase">
-                        <tr>
-                            <th class="px-6 py-4 text-left">Tgl</th>
-                            <th class="px-6 py-4 text-left">Nama & Unit</th>
-                            <th class="px-6 py-4 text-left">Barang</th>
-                            <th class="px-6 py-4 text-center">Qty</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportTableBody" class="divide-y divide-slate-100"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab Master Barang -->
-        <div id="tab-master" class="tab-content hidden max-w-4xl mx-auto space-y-6">
-            <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
-                <div class="p-8 border-b border-slate-100 bg-slate-50/30 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h2 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">Master Barang Cloud</h2>
-                        <p class="text-slate-400 text-xs font-medium">Data tersinkronisasi untuk semua perangkat.</p>
-                    </div>
-                    <div class="flex gap-2 w-full md:w-auto">
-                        <input type="text" id="newMasterItem" placeholder="Tambah barang..." class="flex-1 md:w-64 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-500 font-semibold">
-                        <button onclick="addMasterItem()" class="bg-indigo-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition">Simpan</button>
-                    </div>
-                </div>
-                <div class="p-6">
-                    <div id="masterListGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Preview Modal -->
-    <div id="modalPreview" class="fixed inset-0 z-50 hidden bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-2 no-print">
-        <div class="bg-white w-full max-w-md max-h-[95vh] rounded-[2rem] overflow-hidden flex flex-col">
-            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
-                <span class="text-xs font-black text-slate-500 uppercase">Preview Bukti</span>
-                <div class="flex gap-2">
-                    <button onclick="closePreview()" class="text-xs font-bold text-slate-400">Tutup</button>
-                    <button onclick="window.print()" class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-lg">Cetak</button>
-                </div>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 bg-slate-200 flex justify-center items-start">
-                <div class="bg-white shadow-2xl flex flex-col items-center justify-start" style="width: 210mm; min-height: 297mm; transform: scale(0.4); transform-origin: top center; padding-top: 0.5in;">
-                    <div id="previewSheet" style="width: 4.5in; min-height: 7.7in; padding: 0.2in; box-sizing: border-box; border: 1px dashed #ccc;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="printArea" class="print-only"></div>
-    <datalist id="masterBarangList"></datalist>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        cconst firebaseConfig = {
+// Inisialisasi Firebase
+const firebaseConfig = {
   apiKey: "AIzaSyBp6R5Eg-msuKxd9bTRfMm5BVCDbymdP-8",
   authDomain: "gudang-rsu-dk.firebaseapp.com",
   projectId: "gudang-rsu-dk",
@@ -251,288 +13,471 @@
   appId: "1:91825157272:web:44bf7d7cd4f8280fa18ced",
   measurementId: "G-961497SD4H"
 };
-
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        let transactions = [];
-        let masterItems = [];
-        let currentUser = null;
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('input');
+  const [transactions, setTransactions] = useState([]);
+  const [masterItems, setMasterItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(null);
+  const [previewData, setPreviewData] = useState(null);
+  const [reportPeriod, setReportPeriod] = useState(new Date().toISOString().slice(0, 7));
 
-        // Init Auth
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                document.getElementById('userStatus').innerText = `Sync Active: ${user.uid.substring(0,8)}...`;
-                document.getElementById('loadingOverlay').style.display = 'none';
-                startSync();
-            } else {
-                signInAnonymously(auth);
-            }
-        });
+  // State Form
+  const [formData, setFormData] = useState({
+    tanggal: new Date().toISOString().split('T')[0],
+    namaPengambil: '',
+    unitKerja: '',
+    items: [{ nama: '', qty: 1, satuan: '' }]
+  });
 
-        const startSync = () => {
-            if (!currentUser) return;
-            const transRef = collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
-            onSnapshot(transRef, (snapshot) => {
-                transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                transactions.sort((a, b) => b.timestamp - a.timestamp);
-                renderDatabase();
-                renderReport();
-            });
+  // 1. Auth Logic
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("Auth Error:", err);
+      }
+    };
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
-            const masterRef = collection(db, 'artifacts', appId, 'public', 'data', 'master_items');
-            onSnapshot(masterRef, (snapshot) => {
-                masterItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderMaster();
-                updateDatalist();
-            });
-        };
+  // 2. Data Sync
+  useEffect(() => {
+    if (!user) return;
 
-        // --- Global Functions ---
+    const transRef = collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
+    const masterRef = collection(db, 'artifacts', appId, 'public', 'data', 'master_items');
 
-        window.switchTab = (tab) => {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-            document.getElementById('tab-' + tab).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => {
-                b.classList.remove('tab-active');
-                b.classList.add('text-indigo-200');
-            });
-            document.getElementById('btn-' + tab).classList.add('tab-active');
-        };
+    const unsubTrans = onSnapshot(transRef, (snapshot) => {
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setTransactions(data.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)));
+    }, (err) => console.error("Sync Trans Error:", err));
 
-        window.addRow = (nama = '', qty = 1, satuan = '') => {
-            const container = document.getElementById('itemRows');
-            const div = document.createElement('div');
-            div.className = "flex gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm";
-            div.innerHTML = `
-                <input type="text" placeholder="Pilih barang..." value="${nama}" list="masterBarangList" class="item-nama flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none font-medium">
-                <input type="number" step="any" value="${qty}" class="item-qty w-20 bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm text-center focus:border-indigo-500 outline-none font-bold text-indigo-600">
-                <input type="text" value="${satuan}" placeholder="Sat" class="item-satuan w-16 bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm text-center uppercase focus:border-indigo-500 outline-none">
-                <button type="button" onclick="this.parentElement.remove()" class="text-red-300 hover:text-red-600 px-2 transition-colors">×</button>
-            `;
-            container.appendChild(div);
-        };
+    const unsubMaster = onSnapshot(masterRef, (snapshot) => {
+      setMasterItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (err) => console.error("Sync Master Error:", err));
 
-        const updateDatalist = () => {
-            document.getElementById('masterBarangList').innerHTML = masterItems.map(i => `<option value="${i.name}">`).join('');
-        };
+    return () => {
+      unsubTrans();
+      unsubMaster();
+    };
+  }, [user]);
 
-        window.addMasterItem = async () => {
-            const val = document.getElementById('newMasterItem').value.trim();
-            if(val) {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'master_items'), { name: val, createdAt: Date.now() });
-                document.getElementById('newMasterItem').value = "";
-            }
-        };
+  // Form Handlers
+  const addRow = () => {
+    setFormData({ ...formData, items: [...formData.items, { nama: '', qty: 1, satuan: '' }] });
+  };
 
-        window.removeMasterItem = async (id) => {
-            if(confirm('Hapus item dari Master?')) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'master_items', id));
-            }
-        };
+  const removeRow = (index) => {
+    const newItems = formData.items.filter((_, i) => i !== index);
+    setFormData({ ...formData, items: newItems.length ? newItems : [{ nama: '', qty: 1, satuan: '' }] });
+  };
 
-        const renderMaster = () => {
-            const grid = document.getElementById('masterListGrid');
-            grid.innerHTML = masterItems.sort((a,b) => a.name.localeCompare(b.name)).map(item => `
-                <div class="flex items-center justify-between bg-white border border-slate-100 p-3 rounded-xl shadow-sm hover:border-indigo-200 transition-all group">
-                    <span class="text-xs font-bold text-slate-600 truncate">${item.name}</span>
-                    <button onclick="removeMasterItem('${item.id}')" class="text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">×</button>
+  const updateItem = (index, field, value) => {
+    const newItems = [...formData.items];
+    newItems[index][field] = value;
+    setFormData({ ...formData, items: newItems });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      tanggal: new Date().toISOString().split('T')[0],
+      namaPengambil: '',
+      unitKerja: '',
+      items: [{ nama: '', qty: 1, satuan: '' }]
+    });
+    setIsEditing(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!user) return;
+
+    const payload = {
+      ...formData,
+      timestamp: Date.now(),
+      isoDate: formData.tanggal,
+      tanggal: new Date(formData.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+      regCode: isEditing ? transactions.find(t => t.id === isEditing)?.regCode : `TRX-${transactions.length + 101}`
+    };
+
+    try {
+      if (isEditing) {
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', isEditing), payload);
+        setPreviewData({ id: isEditing, ...payload });
+      } else {
+        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), payload);
+        setPreviewData({ id: docRef.id, ...payload });
+      }
+      resetForm();
+    } catch (err) {
+      alert("Gagal menyimpan ke Cloud.");
+    }
+  };
+
+  const deleteEntry = async (id) => {
+    if (window.confirm("Hapus transaksi ini?")) {
+      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', id));
+    }
+  };
+
+  const startEdit = (entry) => {
+    setFormData({
+      tanggal: entry.isoDate,
+      namaPengambil: entry.namaPengambil,
+      unitKerja: entry.unitKerja,
+      items: entry.items
+    });
+    setIsEditing(entry.id);
+    setActiveTab('input');
+  };
+
+  const addMasterItem = async (e) => {
+    e.preventDefault();
+    const val = e.target.newItem.value.trim();
+    if (val) {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'master_items'), { name: val, createdAt: Date.now() });
+      e.target.reset();
+    }
+  };
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-700"></div>
+      <p className="mt-4 text-sm font-bold text-indigo-700">Menghubungkan ke Cloud...</p>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
+      {/* Print Overlay */}
+      {previewData && (
+        <div className="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+          <div className="bg-white w-full max-w-md max-h-[90vh] rounded-[2rem] flex flex-col overflow-hidden">
+            <div className="p-4 border-b flex justify-between items-center bg-white">
+              <span className="text-xs font-black text-slate-500 uppercase">Preview Bukti</span>
+              <div className="flex gap-2">
+                <button onClick={() => setPreviewData(null)} className="text-xs font-bold text-slate-400 px-3 py-1">Tutup</button>
+                <button onClick={() => window.print()} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Cetak</button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8 bg-slate-100 flex justify-center items-start">
+               <ReceiptContent data={previewData} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden Print Area */}
+      <div className="hidden print:block">
+        <ReceiptContent data={previewData} />
+      </div>
+
+      <header className="bg-indigo-700 text-white shadow-lg no-print">
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="bg-white p-2 rounded-xl">
+                <svg className="w-8 h-8 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+              </div>
+              <div>
+                <h1 className="text-xl font-extrabold tracking-tight italic uppercase">Portal Inventory RT V1.0</h1>
+                <p className="text-indigo-100 text-[10px] font-bold uppercase tracking-widest">User: {user?.uid?.slice(0, 8)}... | LIVE SYNC</p>
+              </div>
+            </div>
+            
+            <nav className="flex bg-indigo-800/50 p-1 rounded-2xl">
+              {['input', 'database', 'report', 'master'].map((tab) => (
+                <button 
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === tab ? 'bg-white text-indigo-700 shadow-sm' : 'text-indigo-200 hover:text-white'}`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 mt-8 no-print">
+        {/* TAB INPUT */}
+        {activeTab === 'input' && (
+          <div className="max-w-3xl mx-auto bg-white rounded-[2rem] shadow-2xl shadow-indigo-100 border border-slate-100 overflow-hidden">
+            <div className="p-8 border-b bg-slate-50/30 flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-black text-slate-800">{isEditing ? 'Edit Transaksi' : 'Form Pengambilan Barang'}</h2>
+                <p className="text-slate-400 text-sm">Input data pengambilan barang medis/umum.</p>
+              </div>
+              {isEditing && (
+                <button onClick={resetForm} className="bg-red-100 text-red-600 px-4 py-2 rounded-xl text-xs font-bold">Batal Edit</button>
+              )}
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal</label>
+                  <input type="date" value={formData.tanggal} onChange={e => setFormData({...formData, tanggal: e.target.value})} required className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 outline-none font-semibold" />
                 </div>
-            `).join('');
-        };
-
-        document.getElementById('formPengambilan').onsubmit = async function(e) {
-            e.preventDefault();
-            const items = Array.from(document.querySelectorAll('#itemRows > div')).map(r => ({
-                nama: r.querySelector('.item-nama').value.trim(),
-                qty: parseFloat(r.querySelector('.item-qty').value) || 0,
-                satuan: r.querySelector('.item-satuan').value.trim()
-            }));
-
-            if(items.length === 0 || items.some(it => it.nama === "")) {
-                alert("Lengkapi data barang!"); return;
-            }
-
-            const rawDate = document.getElementById('tanggalInput').value;
-            const editId = document.getElementById('editEntryId').value;
-            
-            const payload = {
-                namaPengambil: document.getElementById('namaPengambil').value.trim(),
-                unitKerja: document.getElementById('unitKerjaManual').value.trim(),
-                items,
-                tanggal: new Date(rawDate).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}),
-                isoDate: rawDate,
-                timestamp: Date.now()
-            };
-
-            try {
-                if(editId) {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', editId), payload);
-                    showPreview(editId);
-                } else {
-                    payload.regCode = `TRX-${transactions.length + 101}`;
-                    const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), payload);
-                    showPreview(docRef.id);
-                }
-                resetForm();
-            } catch (err) { alert("Gagal menyimpan ke Cloud."); }
-        };
-
-        window.resetForm = () => {
-            document.getElementById('formPengambilan').reset();
-            document.getElementById('tanggalInput').value = new Date().toISOString().split('T')[0];
-            document.getElementById('editEntryId').value = "";
-            document.getElementById('itemRows').innerHTML = '';
-            document.getElementById('formTitle').innerText = "Form Pengambilan Barang";
-            document.getElementById('btnCancelEdit').classList.add('hidden');
-            addRow();
-        };
-
-        window.deleteEntry = async (id) => {
-            if(confirm('Hapus transaksi ini?')) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', id));
-            }
-        };
-
-        window.editEntry = (id) => {
-            const entry = transactions.find(t => t.id === id);
-            if(!entry) return;
-            document.getElementById('editEntryId').value = entry.id;
-            document.getElementById('tanggalInput').value = entry.isoDate;
-            document.getElementById('namaPengambil').value = entry.namaPengambil;
-            document.getElementById('unitKerjaManual').value = entry.unitKerja;
-            document.getElementById('itemRows').innerHTML = '';
-            entry.items.forEach(it => addRow(it.nama, it.qty, it.satuan));
-            document.getElementById('formTitle').innerText = "Edit Transaksi";
-            document.getElementById('btnCancelEdit').classList.remove('hidden');
-            switchTab('input');
-        };
-
-        const renderDatabase = () => {
-            const body = document.getElementById('databaseBody');
-            body.innerHTML = transactions.map(row => `
-                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
-                    <td class="px-6 py-4">
-                        <div class="font-bold text-indigo-600">${row.regCode}</div>
-                        <div class="text-[9px] text-slate-400 font-bold">${row.tanggal}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="font-bold text-slate-700 uppercase leading-tight">${row.namaPengambil}</div>
-                        <div class="text-[9px] text-slate-400 font-bold uppercase">${row.unitKerja}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex flex-wrap gap-1">
-                            ${row.items.map(it => `<span class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold">${it.nama} (${it.qty.toLocaleString('id-ID')})</span>`).join('')}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <div class="flex gap-3 justify-center">
-                            <button onclick="showPreview('${row.id}')" class="text-indigo-600 font-bold text-xs hover:underline">CETAK</button>
-                            <button onclick="editEntry('${row.id}')" class="text-amber-500 font-bold text-xs hover:underline">EDIT</button>
-                            <button onclick="deleteEntry('${row.id}')" class="text-red-400 font-bold text-xs hover:underline">HAPUS</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        };
-
-        window.renderReport = () => {
-            const period = document.getElementById('reportPeriod').value;
-            if(!period) return;
-            const [y, m] = period.split('-');
-            const filtered = transactions.filter(t => {
-                const d = new Date(t.isoDate);
-                return d.getFullYear() == y && (d.getMonth() + 1) == m;
-            });
-            
-            let html = "";
-            filtered.forEach(entry => {
-                entry.items.forEach(it => {
-                    html += `<tr class="border-b border-slate-100">
-                        <td class="px-6 py-3 text-[10px] font-bold text-slate-400">${entry.tanggal}</td>
-                        <td class="px-6 py-3"><div class="font-bold uppercase text-slate-700 text-xs">${entry.namaPengambil}</div><div class="text-[9px] text-slate-400 uppercase font-bold">${entry.unitKerja}</div></td>
-                        <td class="px-6 py-3 text-xs font-semibold text-indigo-600 uppercase">${it.nama}</td>
-                        <td class="px-6 py-3 text-center font-bold text-xs">${it.qty.toLocaleString('id-ID')} <small class="text-slate-400 font-normal uppercase">${it.satuan}</small></td>
-                    </tr>`;
-                });
-            });
-            document.getElementById('reportTableBody').innerHTML = html || '<tr><td colspan="4" class="py-10 text-center text-slate-300 italic">Tidak ada data.</td></tr>';
-        };
-
-        window.showPreview = (id) => {
-            const entry = transactions.find(t => t.id === id);
-            if(!entry) return;
-            
-            const content = `
-                <div style="font-family: 'Plus Jakarta Sans', sans-serif; color: #000; width: 100%; box-sizing: border-box; background: white;">
-                    <div style="text-align: center; border-bottom: 2.5px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
-                        <h2 style="margin: 0; font-size: 13pt; font-weight: 900; letter-spacing: -0.5px;">RSU DADI KELUARGA</h2>
-                        <p style="margin: 0; font-size: 8pt; font-weight: 700; color: #333; letter-spacing: 2px; text-transform: uppercase;">Bukti Pengambilan Barang</p>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 8pt; margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
-                        <div style="width: 60%;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr><td style="width: 30%; color: #666;">Unit</td><td>: <b>${entry.unitKerja.toUpperCase()}</b></td></tr>
-                                <tr><td style="color: #666;">Pemohon</td><td>: <b>${entry.namaPengambil.toUpperCase()}</b></td></tr>
-                            </table>
-                        </div>
-                        <div style="text-align: right; width: 40%;">
-                            <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 9pt;">${entry.regCode}</div>
-                            <div style="font-size: 7pt; color: #666;">${entry.tanggal}</div>
-                        </div>
-                    </div>
-                    <div style="min-height: 8.5cm;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
-                            <thead>
-                                <tr style="border-bottom: 1.5px solid #000; background: #fafafa;">
-                                    <th style="padding: 8px 4px; text-align: left; width: 65%;">ITEM</th>
-                                    <th style="padding: 8px 4px; text-align: center; width: 15%;">QTY</th>
-                                    <th style="padding: 8px 4px; text-align: center; width: 20%;">SAT</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${entry.items.map(it => `
-                                    <tr style="border-bottom: 0.5px solid #eee;">
-                                        <td style="padding: 10px 4px; font-weight: 600; text-transform: uppercase;">${it.nama}</td>
-                                        <td style="padding: 10px 4px; text-align: center; font-weight: 800; color: #4f46e5;">${it.qty.toLocaleString('id-ID')}</td>
-                                        <td style="padding: 10px 4px; text-align: center; text-transform: uppercase; color: #666; font-size: 7pt;">${it.satuan || '-'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 8pt; text-align: center;">
-                        <div style="width: 120px;">
-                            <p style="margin-bottom: 50px;">Bag. Rumah Tangga,</p>
-                            <p style="font-weight: 800; border-top: 1px solid #eee; padding-top: 5px;">( .................... )</p>
-                        </div>
-                        <div style="width: 120px;">
-                            <p style="margin-bottom: 50px;">Penerima,</p>
-                            <p style="font-weight: 800; border-top: 1px solid #eee; padding-top: 5px;">( .................... )</p>
-                        </div>
-                    </div>
-                    <div style="margin-top: 20px; text-align: center; font-size: 6pt; color: #aaa; border-top: 1px solid #f9f9f9; padding-top: 10px;">
-                        • Dicetak otomatis melalui Cloud Portal Inventory RT • 
-                    </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Penerima</label>
+                  <input type="text" value={formData.namaPengambil} onChange={e => setFormData({...formData, namaPengambil: e.target.value})} placeholder="Nama Pemohon..." required className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 outline-none font-semibold" />
                 </div>
-            `;
-            
-            document.getElementById('previewSheet').innerHTML = content;
-            document.getElementById('printArea').innerHTML = content;
-            document.getElementById('modalPreview').classList.remove('hidden');
-        };
+                <div className="md:col-span-2 space-y-2">
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Unit Kerja</label>
+                  <input type="text" value={formData.unitKerja} onChange={e => setFormData({...formData, unitKerja: e.target.value})} placeholder="Contoh: IGD / Meranti / Poliklinik" required className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 outline-none font-semibold" />
+                </div>
+              </div>
 
-        window.closePreview = () => document.getElementById('modalPreview').classList.add('hidden');
+              <div className="space-y-4">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Daftar Barang</h3>
+                  <button type="button" onClick={addRow} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold">+ Tambah Baris</button>
+                </div>
+                
+                <div className="space-y-3">
+                  {formData.items.map((item, idx) => (
+                    <div key={idx} className="flex gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm items-center">
+                      <input 
+                        type="text" 
+                        list="master-list"
+                        placeholder="Barang..." 
+                        value={item.nama} 
+                        onChange={e => updateItem(idx, 'nama', e.target.value)}
+                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none font-medium" 
+                      />
+                      <input 
+                        type="number" 
+                        step="any" 
+                        value={item.qty} 
+                        onChange={e => updateItem(idx, 'qty', parseFloat(e.target.value) || 0)}
+                        className="w-20 bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm text-center focus:border-indigo-500 outline-none font-bold text-indigo-600" 
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="Sat" 
+                        value={item.satuan} 
+                        onChange={e => updateItem(idx, 'satuan', e.target.value)}
+                        className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm text-center uppercase outline-none focus:border-indigo-500" 
+                      />
+                      <button type="button" onClick={() => removeRow(idx)} className="text-red-300 hover:text-red-600 px-2 font-bold">×</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-        // Initial Row
-        addRow();
-        document.getElementById('tanggalInput').value = new Date().toISOString().split('T')[0];
+              <button type="submit" className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-600 transition-all shadow-xl">
+                {isEditing ? 'Simpan Perubahan' : 'Simpan & Cetak Formulir'}
+              </button>
+            </form>
+          </div>
+        )}
 
-    </script>
-</body>
-</html>
+        {/* TAB DATABASE */}
+        {activeTab === 'database' && (
+          <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
+              <h2 className="text-xl font-bold text-slate-800">Log Transaksi Cloud</h2>
+              <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">UPDATED LIVE</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 text-slate-400 font-bold text-[10px] uppercase">
+                  <tr>
+                    <th className="px-6 py-4">Tgl & ID</th>
+                    <th className="px-6 py-4">Penerima & Unit</th>
+                    <th className="px-6 py-4">Item (Qty)</th>
+                    <th className="px-6 py-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {transactions.map(row => (
+                    <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-indigo-600">{row.regCode}</div>
+                        <div className="text-[9px] text-slate-400 font-bold">{row.tanggal}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-slate-700 uppercase leading-tight">{row.namaPengambil}</div>
+                        <div className="text-[9px] text-slate-400 font-bold uppercase">{row.unitKerja}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {row.items.map((it, i) => (
+                            <span key={i} className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold">{it.nama} ({it.qty})</span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex gap-3 justify-center">
+                          <button onClick={() => setPreviewData(row)} className="text-indigo-600 font-bold text-xs hover:underline">CETAK</button>
+                          <button onClick={() => startEdit(row)} className="text-amber-500 font-bold text-xs hover:underline">EDIT</button>
+                          <button onClick={() => deleteEntry(row.id)} className="text-red-400 font-bold text-xs hover:underline">HAPUS</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
+        {/* TAB REPORT */}
+        {activeTab === 'report' && (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-3xl shadow-lg border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+              <h2 className="text-xl font-bold text-slate-800">Rekap Bulanan</h2>
+              <input type="month" value={reportPeriod} onChange={e => setReportPeriod(e.target.value)} className="bg-slate-50 border rounded-xl px-4 py-2" />
+            </div>
+            <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-slate-200">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-900 text-white font-bold text-[10px] uppercase">
+                  <tr>
+                    <th className="px-6 py-4 text-left">Tgl</th>
+                    <th className="px-6 py-4 text-left">Nama & Unit</th>
+                    <th className="px-6 py-4 text-left">Barang</th>
+                    <th className="px-6 py-4 text-center">Qty</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {transactions
+                    .filter(t => t.isoDate.startsWith(reportPeriod))
+                    .flatMap(t => t.items.map((it, i) => (
+                      <tr key={`${t.id}-${i}`}>
+                        <td className="px-6 py-3 text-[10px] font-bold text-slate-400">{t.tanggal}</td>
+                        <td className="px-6 py-3">
+                          <div className="font-bold uppercase text-slate-700 text-xs">{t.namaPengambil}</div>
+                          <div className="text-[9px] text-slate-400 uppercase font-bold">{t.unitKerja}</div>
+                        </td>
+                        <td className="px-6 py-3 text-xs font-semibold text-indigo-600 uppercase">{it.nama}</td>
+                        <td className="px-6 py-3 text-center font-bold text-xs">{it.qty} <small className="text-slate-400">{it.satuan}</small></td>
+                      </tr>
+                    )))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB MASTER */}
+        {activeTab === 'master' && (
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
+              <div className="p-8 border-b bg-slate-50/30 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-800 uppercase tracking-tight">Master Barang Cloud</h2>
+                  <p className="text-slate-400 text-xs font-medium">Data tersinkronisasi untuk semua perangkat.</p>
+                </div>
+                <form onSubmit={addMasterItem} className="flex gap-2 w-full md:w-auto">
+                  <input name="newItem" type="text" placeholder="Tambah barang..." required className="flex-1 md:w-64 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-500 font-semibold" />
+                  <button type="submit" className="bg-indigo-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition">Simpan</button>
+                </form>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {masterItems.sort((a,b) => a.name.localeCompare(b.name)).map(item => (
+                    <div key={item.id} className="flex items-center justify-between bg-white border border-slate-100 p-3 rounded-xl shadow-sm hover:border-indigo-200 transition-all group">
+                      <span className="text-xs font-bold text-slate-600 truncate">{item.name}</span>
+                      <button onClick={() => deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'master_items', item.id))} className="text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all font-bold">×</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      <datalist id="master-list">
+        {masterItems.map(item => <option key={item.id} value={item.name} />)}
+      </datalist>
+
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+          body { background: white !important; margin: 0; padding: 0; }
+          @page { size: A4 portrait; margin: 0.5in; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// Sub-komponen untuk Konten Bukti (Cetak)
+function ReceiptContent({ data }) {
+  if (!data) return null;
+  return (
+    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: '#000', width: '4.5in', background: 'white', padding: '0.2in', border: '1px dashed #ccc' }}>
+      <div style={{ textAlign: 'center', borderBottom: '2.5px solid #000', paddingBottom: '8px', marginBottom: '12px' }}>
+        <h2 style={{ margin: 0, fontSize: '13pt', fontWeight: '900' }}>RSU DADI KELUARGA</h2>
+        <p style={{ margin: 0, fontSize: '8pt', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase' }}>Bukti Pengambilan Barang</p>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8pt', marginBottom: '15px', borderBottom: '1px dashed #ccc', paddingBottom: '10px' }}>
+        <div style={{ width: '60%' }}>
+          <table style={{ width: '100%' }}>
+            <tbody>
+              <tr><td style={{ width: '30%', color: '#666' }}>Unit</td><td>: <b>{data.unitKerja.toUpperCase()}</b></td></tr>
+              <tr><td style={{ color: '#666' }}>Pemohon</td><td>: <b>{data.namaPengambil.toUpperCase()}</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style={{ textAlign: 'right', width: '40%' }}>
+          <div style={{ fontWeight: '800', fontSize: '9pt' }}>{data.regCode}</div>
+          <div style={{ fontSize: '7pt', color: '#666' }}>{data.tanggal}</div>
+        </div>
+      </div>
+      <div style={{ minHeight: '6cm' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8pt' }}>
+          <thead>
+            <tr style={{ borderBottom: '1.5px solid #000', background: '#fafafa' }}>
+              <th style={{ padding: '8px 4px', textAlign: 'left' }}>ITEM</th>
+              <th style={{ padding: '8px 4px', textAlign: 'center' }}>QTY</th>
+              <th style={{ padding: '8px 4px', textAlign: 'center' }}>SAT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.items.map((it, idx) => (
+              <tr key={idx} style={{ borderBottom: '0.5px solid #eee' }}>
+                <td style={{ padding: '10px 4px', fontWeight: '600', textTransform: 'uppercase' }}>{it.nama}</td>
+                <td style={{ padding: '10px 4px', textAlign: 'center', fontWeight: '800' }}>{it.qty}</td>
+                <td style={{ padding: '10px 4px', textAlign: 'center', textTransform: 'uppercase', color: '#666', fontSize: '7pt' }}>{it.satuan || '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'space-between', fontSize: '8pt', textAlign: 'center' }}>
+        <div style={{ width: '120px' }}>
+          <p style={{ marginBottom: '50px' }}>Bag. Rumah Tangga,</p>
+          <p style={{ fontWeight: '800', borderTop: '1px solid #000', paddingTop: '5px' }}>( .................... )</p>
+        </div>
+        <div style={{ width: '120px' }}>
+          <p style={{ marginBottom: '50px' }}>Penerima,</p>
+          <p style={{ fontWeight: '800', borderTop: '1px solid #000', paddingTop: '5px' }}>( .................... )</p>
+        </div>
+      </div>
+      <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '6pt', color: '#aaa', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+        • Dicetak otomatis melalui Cloud Portal Inventory RT • 
+      </div>
+    </div>
+  );
+}

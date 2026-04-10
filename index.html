@@ -83,7 +83,7 @@
                         <svg class="w-8 h-8 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                     </div>
                     <div>
-                        <h1 class="text-xl font-extrabold tracking-tight italic uppercase">Portal Inventory RT V1.0 By:TOMOSJR2026</h1>
+                        <h1 class="text-xl font-extrabold tracking-tight italic uppercase">Portal Inventory Bagian Rumah Tangga V1.0 By:TOMOSJR2026</h1>
                         <p id="userStatus" class="text-indigo-100 text-[10px] font-bold uppercase tracking-[0.2em]">Memuat User...</p>
                     </div>
                 </div>
@@ -243,16 +243,16 @@
         import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
-  apiKey: "AIzaSyBp6R5Eg-msuKxd9bTRfMm5BVCDbymdP-8",
-  authDomain: "gudang-rsu-dk.firebaseapp.com",
-  projectId: "gudang-rsu-dk",
-  storageBucket: "gudang-rsu-dk.firebasestorage.app",
-  messagingSenderId: "91825157272",
-  appId: "1:91825157272:web:44bf7d7cd4f8280fa18ced",
-  measurementId: "G-961497SD4H"
-};
+            apiKey: "AIzaSyBp6R5Eg-msuKxd9bTRfMm5BVCDbymdP-8",
+            authDomain: "gudang-rsu-dk.firebaseapp.com",
+            projectId: "gudang-rsu-dk",
+            storageBucket: "gudang-rsu-dk.firebasestorage.app",
+            messagingSenderId: "91825157272",
+            appId: "1:91825157272:web:44bf7d7cd4f8280fa18ced",
+            measurementId: "G-961497SD4H"
+        };
 
-        cconst app = initializeApp(firebaseConfig);
+        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -476,7 +476,7 @@
                         <div style="width: 60%;">
                             <table style="width: 100%; border-collapse: collapse;">
                                 <tr><td style="width: 30%; color: #666;">Unit</td><td>: <b>${entry.unitKerja.toUpperCase()}</b></td></tr>
-                                <tr><td style="color: #666;">Pemohon</td><td>: <b>${entry.namaPengambil.toUpperCase()}</b></td></tr>
+                                <tr><td style="color: #666;">Penerima</td><td>: <b>${entry.namaPengambil.toUpperCase()}</b></td></tr>
                             </table>
                         </div>
                         <div style="text-align: right; width: 40%;">
@@ -515,7 +515,7 @@
                         </div>
                     </div>
                     <div style="margin-top: 20px; text-align: center; font-size: 6pt; color: #aaa; border-top: 1px solid #f9f9f9; padding-top: 10px;">
-                        • Dicetak otomatis melalui Cloud Portal Inventory RT • 
+                        • Dicetak otomatis melalui Cloud Portal Inventory Bag.Rumah Tangga • 
                     </div>
                 </div>
             `;

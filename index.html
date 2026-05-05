@@ -6,143 +6,146 @@
     <title>Portal Inventory RSU Dadi Keluarga</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-    <!-- PDF Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f1f5f9;
-            color: #1e293b;
+            background-color: #f8fafc;
         }
         
-        .glass-header {
-            background: rgba(30, 58, 138, 0.95);
-            backdrop-filter: blur(10px);
-        }
-
         .tab-active {
             background-color: white;
-            color: #1e3a8a;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            transform: translateY(-1px);
-        }
-
-        .nav-btn {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .card-premium {
-            background: white;
-            border-radius: 24px;
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            color: #4f46e5;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
 
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0; 
+            }
             .no-print { display: none !important; }
+            .print-only { 
+                display: flex !important; 
+                flex-direction: column;
+                align-items: center; 
+                justify-content: flex-start;
+                width: 100%;
+                min-height: 100vh;
+                background: white;
+                padding-top: 0.5in; 
+            }
+            body { 
+                background: white; 
+                margin: 0;
+                padding: 0;
+            }
+            #printArea {
+                width: 4.5in;
+                height: 7.7in;
+                padding: 0.2in;
+                box-sizing: border-box;
+                border: 0.5px solid #eee;
+                margin: 0 auto; 
+            }
         }
 
-        ::-webkit-scrollbar { width: 5px; }
+        .print-only { display: none; }
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
         #loadingOverlay {
             position: fixed;
             inset: 0;
-            background: #ffffff;
+            background: rgba(255,255,255,0.8);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 100;
         }
     </style>
 </head>
-<body class="min-h-screen pb-20">
+<body class="min-h-screen pb-12">
 
     <div id="loadingOverlay">
         <div class="flex flex-col items-center">
-            <div class="relative">
-                <div class="w-16 h-16 border-4 border-blue-100 border-t-blue-700 rounded-full animate-spin"></div>
-            </div>
-            <p class="mt-6 text-sm font-bold text-slate-600 tracking-widest uppercase">Sinkronisasi Data Cloud...</p>
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-700"></div>
+            <p class="mt-4 text-sm font-bold text-indigo-700">Mohon tunggu sebentar,mas Tomo lagi pusing...</p>
         </div>
     </div>
 
-    <!-- Header -->
-    <header class="glass-header text-white sticky top-0 z-40 no-print border-b border-white/10">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex flex-col lg:flex-row justify-between items-center gap-6">
-                <div class="flex items-center gap-5">
-                    <div class="bg-white/10 p-3 rounded-2xl border border-white/20">
-                        <svg class="w-7 h-7 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+    <!-- Header Aplikasi -->
+    <header class="bg-indigo-700 text-white shadow-lg no-print">
+        <div class="container mx-auto px-6 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="bg-white p-2 rounded-xl">
+                        <svg class="w-8 h-8 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                     </div>
                     <div>
-                        <h1 class="text-lg font-extrabold tracking-tight leading-none">PORTAL INVENTORY <span class="text-blue-400">RT</span></h1>
-                        <p id="userStatus" class="text-[9px] font-bold text-blue-200 mt-1 uppercase tracking-widest opacity-80 italic">Menghubungkan ke server...</p>
+                        <h1 class="text-xl font-extrabold tracking-tight italic uppercase">Portal Inventory RT V1.0 By:TOMOSJR2026</h1>
+                        <p id="userStatus" class="text-indigo-100 text-[10px] font-bold uppercase tracking-[0.2em]">Memuat User...</p>
                     </div>
                 </div>
                 
-                <nav class="flex bg-black/20 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md overflow-x-auto max-w-full">
-                    <button onclick="switchTab('input')" id="btn-input" class="nav-btn px-6 py-2.5 rounded-xl text-xs font-bold tab-active whitespace-nowrap">INPUT BARANG</button>
-                    <button onclick="switchTab('database')" id="btn-database" class="nav-btn px-6 py-2.5 rounded-xl text-xs font-bold text-blue-100 hover:bg-white/10 whitespace-nowrap">RIWAYAT TRANS</button>
-                    <button onclick="switchTab('report')" id="btn-report" class="nav-btn px-6 py-2.5 rounded-xl text-xs font-bold text-blue-100 hover:bg-white/10 whitespace-nowrap">REKAP BULANAN</button>
-                    <button onclick="switchTab('master')" id="btn-master" class="nav-btn px-6 py-2.5 rounded-xl text-xs font-bold text-blue-100 hover:bg-white/10 whitespace-nowrap">MASTER DATA</button>
+                <nav class="flex bg-indigo-800/50 p-1 rounded-2xl overflow-x-auto">
+                    <button onclick="switchTab('input')" id="btn-input" class="nav-btn px-6 py-2 rounded-xl text-sm font-bold transition-all tab-active whitespace-nowrap">Input</button>
+                    <button onclick="switchTab('database')" id="btn-database" class="nav-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-indigo-200 hover:text-white whitespace-nowrap">Riwayat</button>
+                    <button onclick="switchTab('report')" id="btn-report" class="nav-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-indigo-200 hover:text-white whitespace-nowrap">Laporan</button>
+                    <button onclick="switchTab('master')" id="btn-master" class="nav-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-indigo-200 hover:text-white whitespace-nowrap">Master Barang</button>
                 </nav>
             </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 mt-10 no-print">
-        
+    <main class="container mx-auto px-4 mt-8 no-print">
         <!-- Tab Input -->
-        <div id="tab-input" class="tab-content max-w-4xl mx-auto space-y-8">
-            <div class="card-premium overflow-hidden">
-                <div class="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+        <div id="tab-input" class="tab-content max-w-3xl mx-auto space-y-6">
+            <div class="bg-white rounded-[2rem] shadow-2xl shadow-indigo-100 border border-slate-100 overflow-hidden">
+                <div class="p-8 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
                     <div>
-                        <h2 id="formTitle" class="text-xl font-extrabold text-slate-800">Form Pengambilan Barang</h2>
-                        <p class="text-slate-400 text-xs font-medium mt-1">Pastikan data yang diinput sudah sesuai dengan fisik barang.</p>
+                        <h2 id="formTitle" class="text-2xl font-black text-slate-800">Form Pengambilan Barang</h2>
+                        <p class="text-slate-400 text-sm">Lengkapi data pengambilan barang (Mendukung angka pecahan).</p>
                     </div>
-                    <button id="btnCancelEdit" onclick="resetForm()" class="hidden bg-rose-50 text-rose-600 px-4 py-2 rounded-xl text-xs font-bold border border-rose-100 hover:bg-rose-100 transition">
-                        Batal Perubahan
+                    <button id="btnCancelEdit" onclick="resetForm()" class="hidden bg-red-100 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-200 transition">
+                        Batal Edit
                     </button>
                 </div>
 
                 <form id="formPengambilan" class="p-8 space-y-8">
                     <input type="hidden" id="editEntryId" value="">
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
-                            <label class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">Tanggal Transaksi</label>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal Pengambilan</label>
                             <input type="date" id="tanggalInput" required 
-                                class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all outline-none font-semibold">
+                                class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 transition-all outline-none font-semibold">
                         </div>
                         <div class="space-y-2">
-                            <label class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">Nama Penerima</label>
-                            <input type="text" id="namaPengambil" required placeholder="Siapa yang mengambil?" 
-                                class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all outline-none font-semibold">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nama Penerima</label>
+                            <input type="text" id="namaPengambil" required placeholder="Nama Pemohon..." 
+                                class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 transition-all outline-none font-semibold">
                         </div>
                         <div class="space-y-2 md:col-span-2">
-                            <label class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">Unit / Ruangan</label>
-                            <input type="text" id="unitKerjaManual" required placeholder="Contoh: VK / Dahlia / Manajemen" 
-                                class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all outline-none font-semibold">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Unit Kerja / Ruangan</label>
+                            <input type="text" id="unitKerjaManual" required placeholder="Contoh: Meranti / IGD / Poliklinik" 
+                                class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm focus:border-indigo-500 transition-all outline-none font-semibold">
                         </div>
                     </div>
 
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                            <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Detail Item</h3>
-                            <button type="button" onclick="addRow()" class="text-blue-600 text-xs font-bold hover:bg-blue-50 px-3 py-1.5 rounded-lg transition">
-                                + Baris Baru
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Daftar Barang</h3>
+                            <button type="button" onclick="addRow()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
+                                + Tambah Baris
                             </button>
                         </div>
                         <div id="itemRows" class="space-y-3"></div>
                     </div>
 
-                    <div class="pt-6">
-                        <button type="submit" id="submitBtn" class="w-full bg-blue-700 text-white py-5 rounded-2xl font-extrabold text-base hover:bg-blue-800 transition-all shadow-xl shadow-blue-200 active:scale-[0.98]">
-                            SIMPAN TRANSAKSI & CETAK
+                    <div class="pt-4">
+                        <button type="submit" id="submitBtn" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-600 transition-all shadow-xl active:scale-[0.99]">
+                            Simpan & Cetak Formulir
                         </button>
                     </div>
                 </form>
@@ -150,55 +153,42 @@
         </div>
 
         <!-- Tab Riwayat -->
-        <div id="tab-database" class="tab-content hidden space-y-6">
-            <div class="card-premium overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <h2 class="text-lg font-extrabold text-slate-800">Log Transaksi Cloud</h2>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Terhubung</span>
-                    </div>
+        <div id="tab-database" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-slate-800">Log Transaksi Cloud</h2>
+                    <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">LIVE SYNC</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-400 font-extrabold text-[9px] uppercase tracking-widest border-b border-slate-100">
-                                <th class="px-8 py-5">REF ID</th>
-                                <th class="px-8 py-5">PENERIMA / UNIT</th>
-                                <th class="px-8 py-5">ITEM LIST</th>
-                                <th class="px-8 py-5 text-center">TINDAKAN</th>
+                        <thead class="bg-slate-50 text-slate-400 font-bold text-[10px] uppercase">
+                            <tr>
+                                <th class="px-6 py-4">Tgl & ID</th>
+                                <th class="px-6 py-4">Penerima & Unit</th>
+                                <th class="px-6 py-4">Item (Qty)</th>
+                                <th class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="databaseBody" class="divide-y divide-slate-50"></tbody>
+                        <tbody id="databaseBody" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
         <!-- Tab Laporan -->
-        <div id="tab-report" class="tab-content hidden space-y-6">
-            <div class="card-premium p-6 flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
-                <div>
-                    <h2 class="text-lg font-extrabold text-slate-800">Rekapitulasi Bulanan</h2>
-                    <p class="text-slate-400 text-xs mt-1 font-medium">Laporan rincian pengeluaran per periode.</p>
-                </div>
-                <div class="flex gap-3">
-                    <input type="month" id="reportPeriod" onchange="renderReport()" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold outline-none focus:border-blue-500">
-                    <button onclick="exportReportToPDF()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-lg hover:bg-emerald-700 transition flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        CETAK PDF
-                    </button>
-                </div>
+        <div id="tab-report" class="tab-content hidden">
+            <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                <h2 class="text-xl font-bold text-slate-800">Laporan Rekap Bulanan</h2>
+                <input type="month" id="reportPeriod" onchange="renderReport()" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2">
             </div>
-            
-            <div class="card-premium overflow-hidden">
+            <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
                 <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-slate-900 text-white font-bold text-[9px] uppercase tracking-widest">
-                            <th class="px-8 py-5 text-left">TANGGAL</th>
-                            <th class="px-8 py-5 text-left">PENERIMA & UNIT</th>
-                            <th class="px-8 py-5 text-left">NAMA BARANG</th>
-                            <th class="px-8 py-5 text-center">QTY</th>
+                    <thead class="bg-slate-900 text-white font-bold text-[10px] uppercase">
+                        <tr>
+                            <th class="px-6 py-4 text-left">Tgl</th>
+                            <th class="px-6 py-4 text-left">Nama & Unit</th>
+                            <th class="px-6 py-4 text-left">Barang</th>
+                            <th class="px-6 py-4 text-center">Qty</th>
                         </tr>
                     </thead>
                     <tbody id="reportTableBody" class="divide-y divide-slate-100"></tbody>
@@ -206,46 +196,45 @@
             </div>
         </div>
 
-        <!-- Tab Master -->
-        <div id="tab-master" class="tab-content hidden max-w-5xl mx-auto space-y-6">
-            <div class="card-premium overflow-hidden">
-                <div class="p-8 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-6">
+        <!-- Tab Master Barang -->
+        <div id="tab-master" class="tab-content hidden max-w-4xl mx-auto space-y-6">
+            <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="p-8 border-b border-slate-100 bg-slate-50/30 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
-                        <h2 class="text-xl font-extrabold text-slate-800">Master Data Barang</h2>
-                        <p class="text-slate-400 text-xs font-medium">Database utama item gudang rumah tangga.</p>
+                        <h2 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">Master Barang Cloud</h2>
+                        <p class="text-slate-400 text-xs font-medium">Data tersinkronisasi untuk semua perangkat.</p>
                     </div>
                     <div class="flex gap-2 w-full md:w-auto">
-                        <input type="text" id="newMasterItem" placeholder="Ketik nama barang baru..." class="flex-1 md:w-80 bg-white border border-slate-200 rounded-2xl px-5 py-3 text-sm outline-none focus:border-blue-500 font-semibold shadow-sm">
-                        <button onclick="addMasterItem()" class="bg-blue-700 text-white px-8 py-3 rounded-2xl text-sm font-bold hover:bg-blue-800 transition shadow-lg">TAMBAH</button>
+                        <input type="text" id="newMasterItem" placeholder="Tambah barang..." class="flex-1 md:w-64 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-500 font-semibold">
+                        <button onclick="addMasterItem()" class="bg-indigo-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition">Simpan</button>
                     </div>
                 </div>
-                <div class="p-8">
-                    <div id="masterListGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                <div class="p-6">
+                    <div id="masterListGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Modal Preview Cetak Bukti -->
-    <div id="modalPreview" class="fixed inset-0 z-50 hidden bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 no-print">
-        <div class="bg-white w-full max-w-xl max-h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="text-sm font-black text-slate-500 uppercase tracking-widest">Preview Cetak</h3>
-                <div class="flex gap-3">
-                    <button onclick="closePreview()" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition">Tutup</button>
-                    <button onclick="window.print()" class="bg-blue-700 text-white px-6 py-2 rounded-xl text-xs font-bold shadow-lg">CETAK SEKARANG</button>
+    <!-- Preview Modal -->
+    <div id="modalPreview" class="fixed inset-0 z-50 hidden bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-2 no-print">
+        <div class="bg-white w-full max-w-md max-h-[95vh] rounded-[2rem] overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                <span class="text-xs font-black text-slate-500 uppercase">Preview Bukti</span>
+                <div class="flex gap-2">
+                    <button onclick="closePreview()" class="text-xs font-bold text-slate-400">Tutup</button>
+                    <button onclick="window.print()" class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-lg">Cetak</button>
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-8 bg-slate-100 flex justify-center">
-                <div id="previewSheetContainer" class="bg-white shadow-2xl p-6" style="width: 100%; max-width: 4.5in;">
-                    <div id="previewSheet"></div>
+            <div class="flex-1 overflow-y-auto p-4 bg-slate-200 flex justify-center items-start">
+                <div class="bg-white shadow-2xl flex flex-col items-center justify-start" style="width: 210mm; min-height: 297mm; transform: scale(0.4); transform-origin: top center; padding-top: 0.5in;">
+                    <div id="previewSheet" style="width: 4.5in; min-height: 7.7in; padding: 0.2in; box-sizing: border-box; border: 1px dashed #ccc;"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Hidden Print Area -->
-    <div id="printArea" class="hidden"></div>
+    <div id="printArea" class="print-only"></div>
     <datalist id="masterBarangList"></datalist>
 
     <script type="module">
@@ -272,10 +261,11 @@
         let masterItems = [];
         let currentUser = null;
 
+        // Init Auth
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
-                document.getElementById('userStatus').innerText = `Sync Aktif: ${user.uid.substring(0,10)}`;
+                document.getElementById('userStatus').innerText = `Sync Active: ${user.uid.substring(0,8)}...`;
                 document.getElementById('loadingOverlay').style.display = 'none';
                 startSync();
             } else {
@@ -285,38 +275,43 @@
 
         const startSync = () => {
             if (!currentUser) return;
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), (sn) => {
-                transactions = sn.docs.map(d => ({ id: d.id, ...d.data() }));
+            const transRef = collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
+            onSnapshot(transRef, (snapshot) => {
+                transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 transactions.sort((a, b) => b.timestamp - a.timestamp);
                 renderDatabase();
                 renderReport();
             });
 
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'master_items'), (sn) => {
-                masterItems = sn.docs.map(d => ({ id: d.id, ...d.data() }));
+            const masterRef = collection(db, 'artifacts', appId, 'public', 'data', 'master_items');
+            onSnapshot(masterRef, (snapshot) => {
+                masterItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderMaster();
                 updateDatalist();
             });
         };
 
+        // --- Global Functions ---
+
         window.switchTab = (tab) => {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
             document.getElementById('tab-' + tab).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('tab-active'));
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.remove('tab-active');
+                b.classList.add('text-indigo-200');
+            });
             document.getElementById('btn-' + tab).classList.add('tab-active');
         };
 
         window.addRow = (nama = '', qty = 1, satuan = '') => {
             const container = document.getElementById('itemRows');
             const div = document.createElement('div');
-            div.className = "flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in zoom-in duration-300";
+            div.className = "flex gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm";
             div.innerHTML = `
-                <input type="text" placeholder="Pilih barang..." value="${nama}" list="masterBarangList" class="item-nama flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none font-bold">
-                <div class="flex gap-2">
-                    <input type="number" step="any" value="${qty}" class="item-qty w-20 bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-sm text-center focus:border-blue-500 outline-none font-black text-blue-700">
-                    <input type="text" value="${satuan}" placeholder="Sat" class="item-satuan w-20 bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-sm text-center uppercase focus:border-blue-500 outline-none font-bold text-slate-500">
-                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="bg-rose-50 text-rose-400 hover:text-rose-600 px-3 rounded-xl transition-colors">×</button>
-                </div>
+                <input type="text" placeholder="Pilih barang..." value="${nama}" list="masterBarangList" class="item-nama flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none font-medium">
+                <input type="number" step="any" value="${qty}" class="item-qty w-20 bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm text-center focus:border-indigo-500 outline-none font-bold text-indigo-600">
+                <input type="text" value="${satuan}" placeholder="Sat" class="item-satuan w-16 bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm text-center uppercase focus:border-indigo-500 outline-none">
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-300 hover:text-red-600 px-2 transition-colors">×</button>
             `;
             container.appendChild(div);
         };
@@ -342,11 +337,9 @@
         const renderMaster = () => {
             const grid = document.getElementById('masterListGrid');
             grid.innerHTML = masterItems.sort((a,b) => a.name.localeCompare(b.name)).map(item => `
-                <div class="flex items-center justify-between bg-white border border-slate-100 p-4 rounded-2xl shadow-sm hover:border-blue-200 hover:shadow-md transition-all group">
-                    <span class="text-xs font-bold text-slate-600 truncate uppercase">${item.name}</span>
-                    <button onclick="removeMasterItem('${item.id}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
+                <div class="flex items-center justify-between bg-white border border-slate-100 p-3 rounded-xl shadow-sm hover:border-indigo-200 transition-all group">
+                    <span class="text-xs font-bold text-slate-600 truncate">${item.name}</span>
+                    <button onclick="removeMasterItem('${item.id}')" class="text-slate-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">×</button>
                 </div>
             `).join('');
         };
@@ -360,7 +353,7 @@
             }));
 
             if(items.length === 0 || items.some(it => it.nama === "")) {
-                alert("Mohon isi daftar barang dengan lengkap!"); return;
+                alert("Lengkapi data barang!"); return;
             }
 
             const rawDate = document.getElementById('tanggalInput').value;
@@ -385,7 +378,7 @@
                     showPreview(docRef.id);
                 }
                 resetForm();
-            } catch (err) { alert("Kesalahan koneksi."); }
+            } catch (err) { alert("Gagal menyimpan ke Cloud."); }
         };
 
         window.resetForm = () => {
@@ -399,7 +392,7 @@
         };
 
         window.deleteEntry = async (id) => {
-            if(confirm('Hapus transaksi ini secara permanen?')) {
+            if(confirm('Hapus transaksi ini?')) {
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', id));
             }
         };
@@ -413,7 +406,7 @@
             document.getElementById('unitKerjaManual').value = entry.unitKerja;
             document.getElementById('itemRows').innerHTML = '';
             entry.items.forEach(it => addRow(it.nama, it.qty, it.satuan));
-            document.getElementById('formTitle').innerText = "Edit Riwayat Transaksi";
+            document.getElementById('formTitle').innerText = "Edit Transaksi";
             document.getElementById('btnCancelEdit').classList.remove('hidden');
             switchTab('input');
         };
@@ -421,25 +414,25 @@
         const renderDatabase = () => {
             const body = document.getElementById('databaseBody');
             body.innerHTML = transactions.map(row => `
-                <tr class="hover:bg-slate-50/80 transition-colors">
-                    <td class="px-8 py-5">
-                        <div class="font-black text-blue-700 tracking-tighter">${row.regCode}</div>
-                        <div class="text-[9px] text-slate-400 font-bold mt-1">${row.tanggal}</div>
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-indigo-600">${row.regCode}</div>
+                        <div class="text-[9px] text-slate-400 font-bold">${row.tanggal}</div>
                     </td>
-                    <td class="px-8 py-5">
-                        <div class="font-bold text-slate-700 uppercase">${row.namaPengambil}</div>
-                        <div class="text-[9px] text-slate-400 font-extrabold uppercase mt-1 tracking-wider">${row.unitKerja}</div>
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-700 uppercase leading-tight">${row.namaPengambil}</div>
+                        <div class="text-[9px] text-slate-400 font-bold uppercase">${row.unitKerja}</div>
                     </td>
-                    <td class="px-8 py-5">
-                        <div class="flex flex-wrap gap-1.5">
-                            ${row.items.map(it => `<span class="text-[9px] bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-black uppercase">${it.nama} (${it.qty})</span>`).join('')}
+                    <td class="px-6 py-4">
+                        <div class="flex flex-wrap gap-1">
+                            ${row.items.map(it => `<span class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold">${it.nama} (${it.qty.toLocaleString('id-ID')})</span>`).join('')}
                         </div>
                     </td>
-                    <td class="px-8 py-5 text-center">
-                        <div class="flex gap-4 justify-center">
-                            <button onclick="showPreview('${row.id}')" class="text-blue-600 font-bold text-xs hover:text-blue-800">LIHAT</button>
-                            <button onclick="editEntry('${row.id}')" class="text-slate-400 font-bold text-xs hover:text-slate-600">EDIT</button>
-                            <button onclick="deleteEntry('${row.id}')" class="text-rose-300 font-bold text-xs hover:text-rose-500">HAPUS</button>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex gap-3 justify-center">
+                            <button onclick="showPreview('${row.id}')" class="text-indigo-600 font-bold text-xs hover:underline">CETAK</button>
+                            <button onclick="editEntry('${row.id}')" class="text-amber-500 font-bold text-xs hover:underline">EDIT</button>
+                            <button onclick="deleteEntry('${row.id}')" class="text-red-400 font-bold text-xs hover:underline">HAPUS</button>
                         </div>
                     </td>
                 </tr>
@@ -458,71 +451,15 @@
             let html = "";
             filtered.forEach(entry => {
                 entry.items.forEach(it => {
-                    html += `<tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-8 py-4 text-[10px] font-bold text-slate-400">${entry.tanggal}</td>
-                        <td class="px-8 py-4">
-                            <div class="font-bold uppercase text-slate-700 text-xs">${entry.namaPengambil}</div>
-                            <div class="text-[9px] text-slate-400 uppercase font-bold mt-0.5">${entry.unitKerja}</div>
-                        </td>
-                        <td class="px-8 py-4 text-xs font-bold text-blue-700 uppercase tracking-tight">${it.nama}</td>
-                        <td class="px-8 py-4 text-center font-black text-xs text-slate-600">${it.qty.toLocaleString('id-ID')} <small class="text-slate-400 font-bold uppercase ml-1">${it.satuan}</small></td>
+                    html += `<tr class="border-b border-slate-100">
+                        <td class="px-6 py-3 text-[10px] font-bold text-slate-400">${entry.tanggal}</td>
+                        <td class="px-6 py-3"><div class="font-bold uppercase text-slate-700 text-xs">${entry.namaPengambil}</div><div class="text-[9px] text-slate-400 uppercase font-bold">${entry.unitKerja}</div></td>
+                        <td class="px-6 py-3 text-xs font-semibold text-indigo-600 uppercase">${it.nama}</td>
+                        <td class="px-6 py-3 text-center font-bold text-xs">${it.qty.toLocaleString('id-ID')} <small class="text-slate-400 font-normal uppercase">${it.satuan}</small></td>
                     </tr>`;
                 });
             });
-            document.getElementById('reportTableBody').innerHTML = html || '<tr><td colspan="4" class="py-20 text-center text-slate-300 italic font-medium">Data bulan ini tidak ditemukan...</td></tr>';
-        };
-
-        // EXPORT REKAP TO PDF
-        window.exportReportToPDF = () => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'pt', 'a4');
-            const period = document.getElementById('reportPeriod').value || 'Semua Periode';
-            
-            doc.setFontSize(18);
-            doc.setTextColor(30, 58, 138);
-            doc.text("LAPORAN INVENTORY RUMAH TANGGA", 40, 50);
-            
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`RSU Dadi Keluarga - Periode: ${period}`, 40, 70);
-            doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 40, 85);
-            
-            doc.setDrawColor(200);
-            doc.line(40, 100, 555, 100);
-
-            const tableRows = [];
-            const rows = document.querySelectorAll('#reportTableBody tr');
-            
-            if (rows.length === 0 || rows[0].innerText.includes('tidak ditemukan')) {
-                alert("Tidak ada data untuk dicetak!");
-                return;
-            }
-
-            rows.forEach(tr => {
-                const tds = tr.querySelectorAll('td');
-                if (tds.length === 4) {
-                    tableRows.push([
-                        tds[0].innerText,
-                        tds[1].innerText.replace('\n', ' - '),
-                        tds[2].innerText,
-                        tds[3].innerText
-                    ]);
-                }
-            });
-
-            doc.autoTable({
-                head: [['TANGGAL', 'PENERIMA & UNIT', 'NAMA BARANG', 'QTY']],
-                body: tableRows,
-                startY: 120,
-                theme: 'grid',
-                headStyles: { fillColor: [30, 58, 138], fontSize: 9, halign: 'center' },
-                styles: { fontSize: 8, cellPadding: 6 },
-                columnStyles: {
-                    3: { halign: 'center' }
-                }
-            });
-
-            doc.save(`Rekap-Gudang-RT-${period}.pdf`);
+            document.getElementById('reportTableBody').innerHTML = html || '<tr><td colspan="4" class="py-10 text-center text-slate-300 italic">Tidak ada data.</td></tr>';
         };
 
         window.showPreview = (id) => {
@@ -530,55 +467,55 @@
             if(!entry) return;
             
             const content = `
-                <div style="font-family: 'Plus Jakarta Sans', sans-serif; color: #000; width: 100%; box-sizing: border-box; background: white; padding: 10px;">
+                <div style="font-family: 'Plus Jakarta Sans', sans-serif; color: #000; width: 100%; box-sizing: border-box; background: white;">
                     <div style="text-align: center; border-bottom: 2.5px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
-                        <h2 style="margin: 0; font-size: 14pt; font-weight: 900; letter-spacing: -0.5px; color: #1e3a8a;">RSU DADI KELUARGA</h2>
-                        <p style="margin: 0; font-size: 7pt; font-weight: 700; color: #666; letter-spacing: 3px; text-transform: uppercase; margin-top: 2px;">Bukti Pengambilan Barang</p>
+                        <h2 style="margin: 0; font-size: 13pt; font-weight: 900; letter-spacing: -0.5px;">RSU DADI KELUARGA</h2>
+                        <p style="margin: 0; font-size: 8pt; font-weight: 700; color: #333; letter-spacing: 2px; text-transform: uppercase;">Bukti Pengambilan Barang</p>
                     </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 8pt; margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 8pt; margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
                         <div style="width: 60%;">
                             <table style="width: 100%; border-collapse: collapse;">
-                                <tr><td style="width: 35%; color: #64748b; font-weight: 700; font-size: 7pt;">UNIT</td><td>: <b style="color: #000;">${entry.unitKerja.toUpperCase()}</b></td></tr>
-                                <tr><td style="color: #64748b; font-weight: 700; font-size: 7pt;">PENERIMA</td><td>: <b style="color: #000;">${entry.namaPengambil.toUpperCase()}</b></td></tr>
+                                <tr><td style="width: 30%; color: #666;">Unit</td><td>: <b>${entry.unitKerja.toUpperCase()}</b></td></tr>
+                                <tr><td style="color: #666;">Pemohon</td><td>: <b>${entry.namaPengambil.toUpperCase()}</b></td></tr>
                             </table>
                         </div>
                         <div style="text-align: right; width: 40%;">
-                            <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 10pt; color: #1e40af;">${entry.regCode}</div>
-                            <div style="font-size: 7pt; color: #94a3b8; font-weight: 700; margin-top: 2px;">${entry.tanggal}</div>
+                            <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 9pt;">${entry.regCode}</div>
+                            <div style="font-size: 7pt; color: #666;">${entry.tanggal}</div>
                         </div>
                     </div>
-                    <div style="min-height: 7cm;">
+                    <div style="min-height: 8.5cm;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
                             <thead>
-                                <tr style="border-bottom: 2px solid #1e3a8a; background: #fff;">
-                                    <th style="padding: 10px 4px; text-align: left; width: 65%; color: #1e3a8a; font-weight: 900;">ITEM BARANG</th>
-                                    <th style="padding: 10px 4px; text-align: center; width: 15%; color: #1e3a8a; font-weight: 900;">QTY</th>
-                                    <th style="padding: 10px 4px; text-align: center; width: 20%; color: #1e3a8a; font-weight: 900;">SATUAN</th>
+                                <tr style="border-bottom: 1.5px solid #000; background: #fafafa;">
+                                    <th style="padding: 8px 4px; text-align: left; width: 65%;">ITEM</th>
+                                    <th style="padding: 8px 4px; text-align: center; width: 15%;">QTY</th>
+                                    <th style="padding: 8px 4px; text-align: center; width: 20%;">SAT</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${entry.items.map(it => `
-                                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                                        <td style="padding: 12px 4px; font-weight: 700; text-transform: uppercase; color: #334155;">${it.nama}</td>
-                                        <td style="padding: 12px 4px; text-align: center; font-weight: 900; color: #1e40af; font-size: 9pt;">${it.qty.toLocaleString('id-ID')}</td>
-                                        <td style="padding: 12px 4px; text-align: center; text-transform: uppercase; color: #94a3b8; font-weight: 700; font-size: 7pt;">${it.satuan || '-'}</td>
+                                    <tr style="border-bottom: 0.5px solid #eee;">
+                                        <td style="padding: 10px 4px; font-weight: 600; text-transform: uppercase;">${it.nama}</td>
+                                        <td style="padding: 10px 4px; text-align: center; font-weight: 800; color: #4f46e5;">${it.qty.toLocaleString('id-ID')}</td>
+                                        <td style="padding: 10px 4px; text-align: center; text-transform: uppercase; color: #666; font-size: 7pt;">${it.satuan || '-'}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
-                    <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 7pt; text-align: center;">
-                        <div style="width: 130px;">
-                            <p style="margin-bottom: 60px; color: #64748b; font-weight: 700;">Bag. Rumah Tangga,</p>
-                            <p style="font-weight: 900; border-top: 1px solid #000; padding-top: 5px; color: #000;">( ......................... )</p>
+                    <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 8pt; text-align: center;">
+                        <div style="width: 120px;">
+                            <p style="margin-bottom: 50px;">Bag. Rumah Tangga,</p>
+                            <p style="font-weight: 800; border-top: 1px solid #eee; padding-top: 5px;">( .................... )</p>
                         </div>
-                        <div style="width: 130px;">
-                            <p style="margin-bottom: 60px; color: #64748b; font-weight: 700;">Penerima / Unit,</p>
-                            <p style="font-weight: 900; border-top: 1px solid #000; padding-top: 5px; color: #000;">( ......................... )</p>
+                        <div style="width: 120px;">
+                            <p style="margin-bottom: 50px;">Penerima,</p>
+                            <p style="font-weight: 800; border-top: 1px solid #eee; padding-top: 5px;">( .................... )</p>
                         </div>
                     </div>
-                    <div style="margin-top: 30px; text-align: center; font-size: 6pt; color: #cbd5e1; font-weight: 700; border-top: 1px dashed #f1f5f9; padding-top: 15px; letter-spacing: 1px;">
-                         • Dicetak Otomatis Cloud • tomosjr2026
+                    <div style="margin-top: 20px; text-align: center; font-size: 6pt; color: #aaa; border-top: 1px solid #f9f9f9; padding-top: 10px;">
+                        • Dicetak otomatis melalui Cloud Portal Inventory RT • 
                     </div>
                 </div>
             `;
@@ -590,6 +527,7 @@
 
         window.closePreview = () => document.getElementById('modalPreview').classList.add('hidden');
 
+        // Initial Row
         addRow();
         document.getElementById('tanggalInput').value = new Date().toISOString().split('T')[0];
 

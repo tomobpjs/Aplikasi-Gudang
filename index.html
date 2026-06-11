@@ -373,7 +373,7 @@
                     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'transactions', editId), payload);
                     showPreview(editId);
                 } else {
-                    payload.regCode = `RT-${transactions.length + 101}`;
+                    payload.regCode = `RTDK-${transactions.length + 101}`;
                     const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), payload);
                     showPreview(docRef.id);
                 }
